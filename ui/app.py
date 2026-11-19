@@ -35,11 +35,31 @@ def confidence_badge(resp: dict) -> str:
         return ":red-background[blocked by guardrail]"
     badge = ":blue-background[cached]" if resp.get("cached") else ""
     conf = resp.get("confidence", 0.0)
-    if resp.get("escalate"):
+    if not resp.get("grounded"):
+        badge += " :orange-background[needs review - not fully backed by sources]"
+    elif resp.get("escalate"):
         badge += f" :orange-background[escalate - confidence {conf:.0%}]"
-    elif resp.get("grounded"):
+    else:
         badge += f" :green-background[grounded - confidence {conf:.0%}]"
     return f"{badge}  ·  {resp.get('latency_ms', 0) / 1000:.1f}s"
+
+
+def render_review_note(resp: dict) -> None:
+    """Explain *why* an answer was flagged, instead of a generic warning."""
+    if resp.get("blocked") or not resp.get("escalate"):
+        return
+    claims = resp.get("unsupported_claims") or []
+    if not resp.get("grounded"):
+        note = "The fact-check couldn't find every statement in the sources. Double-check these before acting:"
+        if claims:
+            note += "\n" + "\n".join(f"- {c}" for c in claims[:5])
+        else:
+            note = "The fact-check couldn't verify this answer against the sources - double-check before acting."
+        st.warning(note)
+    elif not resp.get("sources"):
+        st.warning("Nothing in the knowledge base covers this - escalate to the owning team.")
+    else:
+        st.warning("Low confidence - treat this as a starting point and escalate.")
 
 
 def render_sources(resp: dict) -> None:
@@ -132,6 +152,7 @@ for turn in st.session_state.history:
     with st.chat_message("assistant"):
         st.markdown(turn["response"]["answer"])
         st.caption(confidence_badge(turn["response"]))
+        render_review_note(turn["response"])
         render_sources(turn["response"])
 
 question = st.chat_input("e.g. checkout 502s, ERR_POOL_TIMEOUT in the logs")
@@ -171,7 +192,6 @@ if question:
             # The final answer may differ from the streamed text (secret redaction).
             placeholder.markdown(final["answer"])
             st.caption(confidence_badge(final))
-            if final.get("escalate"):
-                st.warning("Low confidence - treat this as a starting point and escalate.")
+            render_review_note(final)
             render_sources(final)
             st.session_state.history.append({"question": question, "response": final})

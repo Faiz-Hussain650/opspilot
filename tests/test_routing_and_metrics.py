@@ -8,6 +8,7 @@ import pytest
 from evaluation.metrics import aggregate, hit_at_k, percentile, recall, reciprocal_rank
 from opspilot.agent.routing import (
     needs_escalation,
+    normalise_citations,
     parse_citations,
     route_after_grading,
     route_after_guard,
@@ -35,6 +36,13 @@ def test_parse_citations():
     answer = "Restart PgBouncer [1]. Cancel queries [2][3]. Not a citation: [abc] or [100]."
     assert parse_citations(answer) == {1, 2, 3}
     assert parse_citations("") == set()
+
+
+def test_full_width_citations_are_normalised():
+    answer = "Cancel the queries 【1】. Roll back 【2†L3-L9】 and check 【 3 】."
+    fixed = normalise_citations(answer)
+    assert fixed == "Cancel the queries [1]. Roll back [2] and check [3]."
+    assert parse_citations(fixed) == {1, 2, 3}
 
 
 @pytest.mark.parametrize(

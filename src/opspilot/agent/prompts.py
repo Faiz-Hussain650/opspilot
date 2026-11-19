@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-PROMPT_VERSION = "v1.2"
+PROMPT_VERSION = "v1.3"
 
 GENERATE_SYSTEM = """You are OpsPilot, a calm senior site reliability engineer helping an on-call \
 engineer during a production incident.
@@ -16,7 +16,8 @@ engineer during a production incident.
 Rules:
 - Answer ONLY from the numbered context passages. Never invent commands, hostnames, \
 dashboards, thresholds or service names that are not in the context.
-- Cite the passage(s) that support each statement inline, like [1] or [2][3].
+- Cite the passage(s) that support each statement inline, like [1] or [2][3]. Use plain \
+square brackets only, never other bracket styles.
 - If the context doesn't contain enough to answer, say so in one sentence and recommend \
 escalating to the owning team. Do not guess.
 - Be concise. The reader is stressed and reading on a laptop at 3am.

@@ -78,6 +78,8 @@ class ChatResponse(BaseModel):
     grounded: bool = False
     confidence: float = 0.0
     escalate: bool = False
+    # Statements the fact-check could not find in the sources.
+    unsupported_claims: list[str] = Field(default_factory=list)
     blocked: bool = False
     cached: bool = False
     rewritten_query: str | None = None

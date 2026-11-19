@@ -14,7 +14,7 @@ import time
 from collections.abc import AsyncIterator
 
 from opspilot import tracing
-from opspilot.agent.routing import parse_citations
+from opspilot.agent.routing import normalise_citations, parse_citations
 from opspilot.cache import SemanticCache
 from opspilot.config import Settings
 from opspilot.guardrails import redact_secrets
@@ -31,7 +31,7 @@ def _dedupe(items: list[str]) -> list[str]:
 def build_response(
     state: dict, steps: list[str], started: float, include_context: bool = False
 ) -> ChatResponse:
-    answer = state.get("answer", "")
+    answer = normalise_citations(state.get("answer", ""))
     relevant: list[RetrievedChunk] = state.get("relevant") or []
     cited = parse_citations(answer)
 
@@ -58,6 +58,7 @@ def build_response(
         grounded=bool(state.get("grounded", False)),
         confidence=float(state.get("confidence", 0.0)),
         escalate=bool(state.get("escalate", False)),
+        unsupported_claims=list(state.get("unsupported_claims") or []),
         blocked=bool(state.get("blocked", False)),
         rewritten_query=rewritten if rewritten and rewritten != state.get("question") else None,
         retrieved=_dedupe(state.get("retrieved_sources") or []),
