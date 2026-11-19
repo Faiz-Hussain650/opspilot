@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Secrets - never commit these
+.env
+*.tfvars
+!*.tfvars.example
+ui/.streamlit/secrets.toml
+
+# Local data and caches
+.cache/
+evaluation/reports/
+mlruns/
+*.db
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/

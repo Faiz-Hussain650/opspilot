@@ -1,0 +1,101 @@
+# Local stack: API, UI, Qdrant, Prometheus, Grafana and MLflow.
+# Ollama is NOT in here on purpose - Docker on macOS can't use the Apple GPU,
+# so Ollama runs natively on the Mac and containers reach it via host.docker.internal.
+#
+#   docker compose up -d --build
+#
+name: opspilot
+
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.13.2
+    ports:
+      - "6333:6333"   # REST + web dashboard at http://localhost:6333/dashboard
+      - "6334:6334"   # gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    image: opspilot-api:local
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # These override .env, which is written for running things on the host.
+      QDRANT_URL: ${COMPOSE_QDRANT_URL:-http://qdrant:6333}
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # needed on Linux, harmless on Mac
+    ports:
+      - "8000:8000"
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: .
+      dockerfile: docker/ui.Dockerfile
+    image: opspilot-ui:local
+    environment:
+      API_URL: http://api:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/opspilot.json
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.22.0
+    command: >
+      mlflow server
+      --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/artifacts
+      --serve-artifacts
+    volumes:
+      - mlflow_data:/mlflow
+    ports:
+      # 5000 is taken by AirPlay Receiver on macOS, so we publish on 5001.
+      - "5001:5000"
+    restart: unless-stopped
+
+volumes:
+  qdrant_data:
+  prometheus_data:
+  grafana_data:
+  mlflow_data:

@@ -1,0 +1,17 @@
+.git
+.github
+.venv
+.cache
+.env
+**/__pycache__
+.pytest_cache
+.ruff_cache
+evaluation/reports
+k8s
+deploy
+docs
+tests
+loadtest
+*.md
+!README.md
+!data/**/*.md

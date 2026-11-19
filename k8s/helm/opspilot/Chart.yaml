@@ -1,0 +1,7 @@
+apiVersion: v2
+name: opspilot
+description: OpsPilot - agentic RAG copilot for on-call engineers (API, UI and Qdrant)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords: [rag, llm, qdrant, fastapi, streamlit]

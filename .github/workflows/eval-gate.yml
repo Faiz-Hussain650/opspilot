@@ -1,0 +1,82 @@
+# Runs the RAG evaluation on every pull request that touches the pipeline,
+# prompts or knowledge base. If retrieval or answer quality drops below the
+# thresholds, the PR check fails - CI/CD for LLM quality, not just for code.
+#
+# Setup (one time): repo Settings -> Secrets and variables -> Actions
+#   Secret   GROQ_API_KEY   (free at https://console.groq.com/keys)
+#   Variable GROQ_MODEL / JUDGE_MODEL (optional overrides)
+name: LLM evaluation gate
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "data/**"
+      - "evaluation/**"
+      - "pyproject.toml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      qdrant:
+        image: qdrant/qdrant:v1.13.2
+        ports:
+          - 6333:6333
+
+    env:
+      LLM_PROVIDER: groq
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      GROQ_MODEL: ${{ vars.GROQ_MODEL || 'llama-3.3-70b-versatile' }}
+      # A different model for the judge spreads the load over two rate-limit buckets.
+      JUDGE_MODEL: ${{ vars.JUDGE_MODEL || 'llama-3.1-8b-instant' }}
+      QDRANT_URL: http://localhost:6333
+      CACHE_ENABLED: "false"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Check for the Groq secret
+        id: secret
+        run: |
+          if [ -z "$GROQ_API_KEY" ]; then
+            echo "::warning::GROQ_API_KEY is not set, skipping the evaluation gate."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run evaluation (CI subset)
+        if: steps.secret.outputs.skip != 'true'
+        run: |
+          uv run python -m evaluation.run_eval \
+            --reindex \
+            --subset ci \
+            --sleep 4 \
+            --no-mlflow \
+            --min-hit-rate 0.75 \
+            --min-faithfulness 0.70 \
+            --min-behaviour 1.0
+
+      - name: Add report to the job summary
+        if: always() && steps.secret.outputs.skip != 'true'
+        run: cat evaluation/reports/*.md >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Upload report
+        if: always() && steps.secret.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: evaluation/reports/

@@ -1,0 +1,66 @@
+[project]
+name = "opspilot"
+version = "1.0.0"
+description = "Agentic RAG copilot for on-call engineers: hybrid search, self-correction, grounded answers with citations."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "python-multipart>=0.0.12",
+    "pyyaml>=6.0",
+    "pypdf>=5.0",
+    "httpx>=0.27",
+    "qdrant-client>=1.13",
+    "fastembed>=0.5",
+    "langchain-core>=0.3.30",
+    "langchain-ollama>=0.3",
+    "langchain-groq>=0.3",
+    "langgraph>=0.3",
+    "prometheus-client>=0.21",
+    "langfuse>=3.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.8",
+    "pre-commit>=4.0",
+    "mlflow-skinny>=2.22,<3",
+]
+ui = [
+    "streamlit>=1.50",
+]
+load = [
+    "locust>=2.32",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/opspilot"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+asyncio_mode = "auto"
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["k8s", "deploy"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+# E501: the formatter handles line length; long prompt strings and regexes are fine.
+ignore = ["B008", "E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["opspilot", "evaluation"]

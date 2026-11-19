@@ -1,0 +1,14 @@
+OpsPilot is deploying. The API pod can take 1-2 minutes on first start
+(it loads the models and indexes the knowledge base).
+
+Watch it come up:
+  kubectl -n {{ .Release.Namespace }} get pods -w
+
+Then open the UI and API:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "opspilot.fullname" . }}-ui {{ .Values.ui.port }}:{{ .Values.ui.port }}
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "opspilot.fullname" . }}-api {{ .Values.api.port }}:{{ .Values.api.port }}
+
+  UI:  http://localhost:{{ .Values.ui.port }}
+  API: http://localhost:{{ .Values.api.port }}/docs
+
+LLM provider: {{ .Values.config.LLM_PROVIDER }}{{ if eq .Values.config.LLM_PROVIDER "ollama" }} at {{ .Values.config.OLLAMA_BASE_URL }} (make sure Ollama is running on your Mac){{ end }}

@@ -1,0 +1,63 @@
+{{- if .Values.qdrant.enabled }}
+{{- $name := printf "%s-qdrant" (include "opspilot.fullname" .) -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "opspilot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: qdrant
+spec:
+  serviceName: {{ $name }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "opspilot.selector" (dict "root" . "component" "qdrant") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "opspilot.labels" . | nindent 8 }}
+        {{- include "opspilot.selector" (dict "root" . "component" "qdrant") | nindent 8 }}
+    spec:
+      containers:
+        - name: qdrant
+          image: {{ .Values.qdrant.image }}
+          ports:
+            - name: http
+              containerPort: 6333
+            - name: grpc
+              containerPort: 6334
+          readinessProbe:
+            httpGet: { path: /readyz, port: http }
+            periodSeconds: 10
+          volumeMounts:
+            - name: storage
+              mountPath: /qdrant/storage
+          resources:
+            {{- toYaml .Values.qdrant.resources | nindent 12 }}
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.qdrant.storage }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "opspilot.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "opspilot.selector" (dict "root" . "component" "qdrant") | nindent 4 }}
+  ports:
+    - name: http
+      port: 6333
+      targetPort: http
+    - name: grpc
+      port: 6334
+      targetPort: grpc
+{{- end }}

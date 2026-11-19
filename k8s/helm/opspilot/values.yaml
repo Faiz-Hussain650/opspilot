@@ -1,0 +1,67 @@
+# Default values for running OpsPilot on a local kind cluster.
+# Override anything with --set or your own -f my-values.yaml.
+
+api:
+  image:
+    repository: opspilot-api      # e.g. ghcr.io/<your-user>/opspilot-api
+    tag: local
+    pullPolicy: IfNotPresent      # images are side-loaded with `kind load docker-image`
+  replicas: 1
+  port: 8000
+  resources:
+    requests:
+      cpu: 250m
+      memory: 768Mi
+    limits:
+      memory: 2Gi
+  autoscaling:
+    enabled: false                # needs metrics-server in the cluster
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+
+ui:
+  image:
+    repository: opspilot-ui
+    tag: local
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 8501
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+qdrant:
+  enabled: true                   # set false and config.QDRANT_URL to use Qdrant Cloud
+  image: qdrant/qdrant:v1.13.2
+  storage: 2Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+
+# Plain (non-secret) settings -> ConfigMap -> environment variables.
+config:
+  OPSPILOT_MODE: local
+  LLM_PROVIDER: ollama
+  # On Docker Desktop for Mac, pods inside kind can reach Ollama on the host here.
+  OLLAMA_BASE_URL: http://host.docker.internal:11434
+  OLLAMA_MODEL: qwen2.5:7b
+  GROQ_MODEL: llama-3.3-70b-versatile
+  QDRANT_URL: ""                  # empty = use the in-cluster Qdrant
+  LOG_LEVEL: INFO
+  CACHE_ENABLED: "true"
+
+# Secrets -> Kubernetes Secret. Leave empty if unused.
+# Pass them on the command line, never commit them:
+#   helm upgrade --install ... --set secrets.GROQ_API_KEY=$GROQ_API_KEY
+secrets:
+  GROQ_API_KEY: ""
+  QDRANT_API_KEY: ""
+  LANGFUSE_PUBLIC_KEY: ""
+  LANGFUSE_SECRET_KEY: ""

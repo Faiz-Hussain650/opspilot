@@ -1,0 +1,10 @@
+# cp terraform.tfvars.example terraform.tfvars   (terraform.tfvars is git-ignored)
+project_id   = "my-gcp-project-id"
+region       = "us-central1"
+api_image    = "docker.io/<your-dockerhub-user>/opspilot-api:latest"
+ui_image     = "docker.io/<your-dockerhub-user>/opspilot-ui:latest"
+qdrant_url   = "https://xxxxxxxx.us-east4-0.gcp.cloud.qdrant.io:6333"
+groq_api_key = "gsk_..."
+qdrant_api_key = "..."
+# langfuse_public_key = "pk-lf-..."
+# langfuse_secret_key = "sk-lf-..."
