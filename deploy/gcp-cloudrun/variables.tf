@@ -26,7 +26,7 @@ variable "qdrant_url" {
 
 variable "groq_model" {
   type    = string
-  default = "llama-3.3-70b-versatile"
+  default = "openai/gpt-oss-120b"
 }
 
 variable "groq_api_key" {

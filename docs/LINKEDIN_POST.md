@@ -1,57 +1,43 @@
-# LinkedIn post (draft)
+# LinkedIn post
 
-Fill in the `[brackets]` with your own numbers from `make eval` before posting.
+At 3 a.m., the fix is almost always written down somewhere. Finding it is the hard part.
 
----
+So I built OpsPilot, an AI copilot for on-call engineers. 🚨
 
-**I built an AI copilot for on-call engineers, and it runs 100% free.**
+𝗦𝗶𝘁𝘂𝗮𝘁𝗶𝗼𝗻
+When production breaks, engineers lose valuable minutes searching through runbooks, old postmortems and past tickets. Generic AI chatbots don't really help here. They don't know your systems, and they sound just as confident when they're guessing.
 
-When production breaks at 3am, the hardest part isn't the fix. It's finding the right runbook,
-the postmortem from last time, and the ticket where someone already solved it.
+𝗧𝗮𝘀𝗸
+Build an assistant that answers only from a team's own documentation, shows where every step comes from, and admits when it doesn't know. And run it like a real production service, without spending anything.
 
-So I built **OpsPilot**: paste an alert or error message, and it answers with step-by-step fixes
-and cites the exact runbook section each step comes from.
+𝗔𝗰𝘁𝗶𝗼𝗻
+🔎 Hybrid search in Qdrant (meaning + exact error codes like ERR_POOL_TIMEOUT), with a reranker on top
+🔁 A LangGraph agent that grades its own search results and rewrites the query when they're weak
+✅ A fact-check step that compares every answer with the sources and lists anything it can't verify
+🛡️ Guardrails against prompt injection and leaked passwords or API keys
+📊 Evaluation tracked in MLflow, a GitHub Actions gate that blocks changes that make answers worse, and Prometheus + Grafana monitoring
+🐳 Docker, Kubernetes (Helm) and a live cloud deployment
 
-What makes it more than a chatbot:
+𝗥𝗲𝘀𝘂𝗹𝘁
+• A live demo anyone can try, running entirely on free tiers (Groq, Qdrant Cloud, Streamlit)
+• Answers with citations in about 5 seconds
+• 40 automated tests and CI on every push
+• My favourite moment: the fact-check caught the AI inventing a kubectl command with the wrong namespace, and flagged it before anyone could run it
 
-🔎 **Hybrid search**: semantic vectors + BM25 keywords fused with RRF, so it matches both "database overloaded" and `ERR_POOL_TIMEOUT`
-🎯 **Cross-encoder reranking** of the top 20 results
-🔁 **Self-correcting agent** (LangGraph): it grades its own search results and rewrites the query when they're weak
-✅ **Grounding check**: a second pass fact-checks every answer against the sources; low confidence = "escalate", never a guess
-⚡ **Semantic cache**: repeated questions in different words come back in milliseconds
-🛡️ **Guardrails**: blocks prompt injection, redacts leaked passwords and API keys
+The biggest lesson? Getting the AI to answer was the easy part. Making it trustworthy, measured and honest about what it doesn't know is where the real engineering happens.
 
-And the MLOps side:
+👉 Try it: https://opspilot-faiz.streamlit.app
+💻 Code: https://github.com/Faiz-Hussain650/opspilot
 
-📊 Evaluation suite with LLM-as-judge, tracked in **MLflow**: hit rate [0.xx], faithfulness [0.xx]
-🚦 A **GitHub Actions gate** that fails any pull request that makes answers worse
-📈 **Prometheus + Grafana** dashboard, **Langfuse** tracing
-🐳 Docker Compose, ☸️ Kubernetes with Helm, CI with Trivy scanning, images on GHCR
+Built with Python, FastAPI, LangGraph, Qdrant, Groq, Ollama, Streamlit, MLflow, Docker, Kubernetes and GitHub Actions.
 
-Stack: Python · FastAPI · LangGraph · Qdrant · FastEmbed · Ollama (Qwen 2.5 7B on my MacBook M3) · Groq (Llama 3.3 70B) · Streamlit · MLflow · Prometheus · Grafana · Docker · Kubernetes · GitHub Actions
+I'd love to hear your feedback, especially from anyone who has been on call! 🙌
 
-Total cloud bill: **$0**, no credit card anywhere.
-
-The most interesting lesson: measuring changed everything. Turning the reranker off dropped
-[metric] from [x] to [y]. I'd never have guessed that from trying a few questions by hand.
-
-🔗 Live demo: [streamlit link]
-💻 Code: [github link]
-
-I come from customer support, where troubleshooting under pressure is the job. This project is
-that experience, automated. Feedback very welcome!
-
-#AIEngineering #MLOps #RAG #LLM #LangGraph #GenerativeAI #DevOps #Python #OpenToWork
+#AIEngineering #RAG #LLM #MLOps #GenerativeAI #LangGraph #DevOps
 
 ---
 
-## Tips for the post
+## Images (in this order)
 
-- **Attach a 30-60 s screen recording** (macOS: `Cmd+Shift+5`) showing a question, the agent
-  steps expanding, the streamed answer with citations, the cached re-ask, and the Grafana dashboard.
-  Video posts get far more reach than text.
-- Add 2-3 images: the architecture diagram from the README (screenshot it from GitHub),
-  the MLflow comparison view, the Grafana dashboard.
-- Put the **GitHub link in the first comment** as well as in the post.
-- Pin the repo on your GitHub profile and add the live demo link to the repo's "About" section.
-- Post on a weekday morning, and reply to every comment in the first hour.
+1. `docs/images/opspilot-pipeline.png`: explains the project at a glance
+2. A screenshot of the live app with a green "grounded" answer and the Sources panel open

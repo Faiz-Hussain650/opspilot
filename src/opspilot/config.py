@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     ollama_num_ctx: int = 8192
 
     groq_api_key: SecretStr | None = None
-    groq_model: str = "llama-3.3-70b-versatile"
+    groq_model: str = "openai/gpt-oss-120b"
 
     # Model used by the evaluation judge. Empty means "same as the main model".
     judge_model: str = ""

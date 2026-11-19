@@ -345,7 +345,7 @@ Now run the UI exactly the way Streamlit Cloud will (in-process, Groq + Qdrant C
 QDRANT_URL="https://xxxx...:6333" QDRANT_API_KEY="your-qdrant-key" make ui-direct
 ```
 
-Open http://localhost:8501 and ask a question. Answers come from Llama 3.3 70B on Groq, and
+Open http://localhost:8501 and ask a question. Answers come from gpt-oss-120b on Groq, and
 they're fast. Open Langfuse **Tracing** to see the trace of each step.
 
 Compare local vs cloud in MLflow (needs the local stack for Qdrant + MLflow):

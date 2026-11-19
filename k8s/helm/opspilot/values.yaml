@@ -52,7 +52,7 @@ config:
   # On Docker Desktop for Mac, pods inside kind can reach Ollama on the host here.
   OLLAMA_BASE_URL: http://host.docker.internal:11434
   OLLAMA_MODEL: qwen2.5:7b
-  GROQ_MODEL: llama-3.3-70b-versatile
+  GROQ_MODEL: openai/gpt-oss-120b
   QDRANT_URL: ""                  # empty = use the in-cluster Qdrant
   LOG_LEVEL: INFO
   CACHE_ENABLED: "true"
