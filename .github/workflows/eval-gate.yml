@@ -33,9 +33,9 @@ jobs:
     env:
       LLM_PROVIDER: groq
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-      GROQ_MODEL: ${{ vars.GROQ_MODEL || 'llama-3.3-70b-versatile' }}
+      GROQ_MODEL: ${{ vars.GROQ_MODEL || 'openai/gpt-oss-120b' }}
       # A different model for the judge spreads the load over two rate-limit buckets.
-      JUDGE_MODEL: ${{ vars.JUDGE_MODEL || 'llama-3.1-8b-instant' }}
+      JUDGE_MODEL: ${{ vars.JUDGE_MODEL || 'openai/gpt-oss-20b' }}
       QDRANT_URL: http://localhost:6333
       CACHE_ENABLED: "false"
 
